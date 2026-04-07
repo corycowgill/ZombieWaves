@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <title>Project Ashfall</title>
+  <link rel="stylesheet" href="/src/ui/styles.css" />
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- Main Menu Overlay -->
+  <div id="main-menu" class="ui-overlay">
+    <div class="menu-content">
+      <div class="game-logo">
+        <h1 class="logo-title">PROJECT<br/><span class="logo-accent">ASHFALL</span></h1>
+        <p class="logo-subtitle">Survive. Rebuild. Reclaim.</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" id="btn-new-game">New Game</button>
+        <button class="btn btn-secondary" id="btn-continue" disabled>Continue</button>
+        <button class="btn btn-secondary" id="btn-settings">Settings</button>
+      </div>
+      <p class="version-text">v1.0.0</p>
+    </div>
+  </div>
+
+  <!-- HUD Overlay (visible during gameplay) -->
+  <div id="hud-overlay" class="ui-overlay" style="display:none; pointer-events:none;">
+    <div id="resource-bar" class="resource-bar">
+      <div class="resource-item" data-resource="food"><span class="resource-icon">🌾</span><span class="resource-value" id="res-food">0</span></div>
+      <div class="resource-item" data-resource="water"><span class="resource-icon">💧</span><span class="resource-value" id="res-water">0</span></div>
+      <div class="resource-item" data-resource="fuel"><span class="resource-icon">⛽</span><span class="resource-value" id="res-fuel">0</span></div>
+      <div class="resource-item" data-resource="scrap"><span class="resource-icon">🔩</span><span class="resource-value" id="res-scrap">0</span></div>
+      <div class="resource-item" data-resource="electronics"><span class="resource-icon">💡</span><span class="resource-value" id="res-electronics">0</span></div>
+      <div class="resource-item" data-resource="medicine"><span class="resource-icon">💊</span><span class="resource-value" id="res-medicine">0</span></div>
+    </div>
+    <div id="nav-bar" class="nav-bar" style="pointer-events:all;">
+      <button class="nav-btn active" data-scene="base">🏠 Base</button>
+      <button class="nav-btn" data-scene="heroes">⚔️ Heroes</button>
+      <button class="nav-btn" data-scene="world">🗺️ Map</button>
+      <button class="nav-btn" data-scene="squad">👥 Squad</button>
+    </div>
+  </div>
+
+  <!-- Building Panel -->
+  <div id="building-panel" class="side-panel" style="display:none;">
+    <div class="panel-header">
+      <h3 id="building-name">Building</h3>
+      <button class="btn-close" id="close-building-panel">✕</button>
+    </div>
+    <div class="panel-body">
+      <div id="building-level" class="stat-row"></div>
+      <div id="building-production" class="stat-row"></div>
+      <div id="building-upgrade-cost" class="upgrade-costs"></div>
+      <button class="btn btn-primary btn-upgrade" id="btn-upgrade-building">Upgrade</button>
+    </div>
+  </div>
+
+  <!-- Hero Detail Panel -->
+  <div id="hero-panel" class="full-panel" style="display:none;">
+    <div class="panel-header">
+      <button class="btn-back" id="close-hero-panel">← Back</button>
+      <h3 id="hero-name">Hero</h3>
+    </div>
+    <div class="panel-body hero-detail">
+      <div class="hero-portrait" id="hero-portrait"></div>
+      <div class="hero-stats" id="hero-stats"></div>
+      <div class="hero-tabs">
+        <button class="tab-btn active" data-tab="skills">Skills</button>
+        <button class="tab-btn" data-tab="gear">Gear</button>
+        <button class="tab-btn" data-tab="bonds">Bonds</button>
+        <button class="tab-btn" data-tab="story">Story</button>
+      </div>
+      <div class="tab-content" id="hero-tab-content"></div>
+    </div>
+  </div>
+
+  <!-- Mission Briefing -->
+  <div id="mission-briefing" class="full-panel" style="display:none;">
+    <div class="panel-header">
+      <button class="btn-back" id="close-mission">← Back</button>
+      <h3 id="mission-name">Mission</h3>
+    </div>
+    <div class="panel-body">
+      <div id="mission-info" class="mission-info"></div>
+      <div id="mission-objectives" class="objective-list"></div>
+      <div id="mission-rewards" class="reward-list"></div>
+      <button class="btn btn-primary btn-deploy" id="btn-deploy">Deploy Squad</button>
+    </div>
+  </div>
+
+  <!-- Dialogue Overlay -->
+  <div id="dialogue-overlay" class="ui-overlay dialogue" style="display:none;">
+    <div class="dialogue-box">
+      <div class="dialogue-portrait" id="dialogue-portrait"></div>
+      <div class="dialogue-content">
+        <span class="dialogue-speaker" id="dialogue-speaker"></span>
+        <p class="dialogue-text" id="dialogue-text"></p>
+      </div>
+      <div class="dialogue-choices" id="dialogue-choices" style="display:none;"></div>
+      <span class="dialogue-continue">Tap to continue</span>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel" class="full-panel" style="display:none;">
+    <div class="panel-header">
+      <button class="btn-back" id="close-settings">← Back</button>
+      <h3>Settings</h3>
+    </div>
+    <div class="panel-body settings-body">
+      <div class="setting-group">
+        <h4>Audio</h4>
+        <label>Music <input type="range" id="music-volume" min="0" max="100" value="60" /></label>
+        <label>SFX <input type="range" id="sfx-volume" min="0" max="100" value="80" /></label>
+      </div>
+      <div class="setting-group">
+        <h4>Accessibility</h4>
+        <label><input type="checkbox" id="large-text" /> Larger Text</label>
+        <label><input type="checkbox" id="colorblind-mode" /> Colorblind Mode</label>
+        <label><input type="checkbox" id="reduced-shake" /> Reduced Screen Shake</label>
+      </div>
+      <div class="setting-group">
+        <h4>Save</h4>
+        <button class="btn btn-secondary" id="btn-save">Save Game</button>
+        <button class="btn btn-secondary" id="btn-load">Load Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
