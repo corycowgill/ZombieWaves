@@ -61,7 +61,7 @@ export class GameStateManager {
 
   constructor() {
     this.inventory = new ResourceInventory();
-    this.activeSquad = new Squad();
+    this.activeSquad = new Squad('squad-main', 'Alpha Squad');
     this.baseManager = new BaseManager(this.inventory);
     this.economyManager = new EconomyManager(this.inventory);
     this.combatEngine = new CombatEngine();
@@ -112,7 +112,7 @@ export class GameStateManager {
     });
 
     // Initialize active squad with first 5 heroes
-    this.activeSquad = new Squad();
+    this.activeSquad = new Squad('squad-main', 'Alpha Squad');
     this.heroes.filter(h => h.isUnlocked).slice(0, 5).forEach(h => {
       this.activeSquad.addHero(h);
     });

@@ -8,7 +8,7 @@
  * and info panels.
  */
 
-import { Building, BuildingType, BuildingStatus } from '../models/Building';
+import { Building, BuildingType } from '../models/Building';
 import { ResourceType } from '../models/Resource';
 
 // ---------------------------------------------------------------------------
@@ -38,19 +38,22 @@ const TILE_W = 64;
 const TILE_H = 32;
 
 /** Texture key lookup per BuildingType. */
-const BUILDING_TEXTURE: Record<BuildingType, string> = {
+const BUILDING_TEXTURE: Partial<Record<BuildingType, string>> = {
   [BuildingType.CommandCenter]: 'building_command_center',
   [BuildingType.Barracks]:      'building_barracks',
   [BuildingType.Farm]:          'building_farm',
   [BuildingType.WaterPurifier]: 'building_water_purifier',
   [BuildingType.Workshop]:      'building_workshop',
-  [BuildingType.Generator]:     'building_power_plant',
-  [BuildingType.MedBay]:        'building_hospital',
-  [BuildingType.WatchTower]:    'building_watchtower',
-  [BuildingType.Warehouse]:     'building_storage',
-  [BuildingType.Lab]:           'building_lab',
-  [BuildingType.TradePost]:     'building_armory',
+  [BuildingType.Infirmary]:     'building_hospital',
+  [BuildingType.ResearchLab]:   'building_lab',
+  [BuildingType.FuelDepot]:     'building_fuel_depot',
+  [BuildingType.ScrapYard]:     'building_scrapyard',
+  [BuildingType.RadarTower]:    'building_watchtower',
+  [BuildingType.HeroQuarters]:  'building_hero_quarters',
   [BuildingType.Wall]:          'building_wall',
+  [BuildingType.Turret]:        'building_turret',
+  [BuildingType.Trap]:          'building_trap',
+  [BuildingType.Garage]:        'building_garage',
 };
 
 /** Human-readable emoji for floating production text. */
@@ -225,7 +228,7 @@ export default class BaseScene extends Phaser.Scene {
   }
 
   private placeBuilding(b: Building): void {
-    const { x, y } = this.isoToScreen(b.col, b.row);
+    const { x, y } = this.isoToScreen(b.gridPosition.col, b.gridPosition.row);
     const textureKey = BUILDING_TEXTURE[b.type] ?? 'building_command_center';
 
     const sprite = this.add.sprite(x, y - TILE_H / 2, textureKey).setDepth(1);
@@ -233,12 +236,10 @@ export default class BaseScene extends Phaser.Scene {
     sprite.setData('buildingId', b.id);
 
     // Dim if not active
-    if (b.status === BuildingStatus.Damaged) {
+    if (b.hitPoints < b.maxHitPoints) {
       sprite.setTint(0xff6666);
-    } else if (b.status === BuildingStatus.Upgrading) {
+    } else if (b.isUpgrading) {
       sprite.setTint(0xffff66);
-    } else if (b.status === BuildingStatus.Disabled) {
-      sprite.setAlpha(0.4);
     }
 
     sprite.on('pointerdown', () => {
@@ -263,7 +264,7 @@ export default class BaseScene extends Phaser.Scene {
 
   private onTileClicked(col: number, row: number): void {
     // Check if a building occupies this tile
-    const occupant = this.buildings.find((b) => b.col === col && b.row === row);
+    const occupant = this.buildings.find((b) => b.gridPosition.col === col && b.gridPosition.row === row);
 
     if (occupant) {
       this.game.events.emit('base:buildingSelected', occupant);
@@ -292,7 +293,7 @@ export default class BaseScene extends Phaser.Scene {
   /** Highlight tiles that do not have a building. */
   highlightBuildableTiles(): void {
     const occupied = new Set(
-      this.buildings.map((b) => `${b.col},${b.row}`),
+      this.buildings.map((b) => `${b.gridPosition.col},${b.gridPosition.row}`),
     );
 
     for (let row = 0; row < GRID_ROWS; row++) {
@@ -328,15 +329,15 @@ export default class BaseScene extends Phaser.Scene {
 
   private showProductionFloaters(): void {
     for (const b of this.buildings) {
-      if (!b.isProducing()) continue;
+      const productions = b.getProductionRate();
+      if (productions.length === 0) continue;
 
-      const productions = b.getProduction();
       for (const entry of productions) {
         const icon = RESOURCE_ICON[entry.resourceType] ?? '';
         const amount = Math.round(entry.amountPerMinute / 12); // per 5-second tick
         if (amount <= 0) continue;
 
-        const { x, y } = this.isoToScreen(b.col, b.row);
+        const { x, y } = this.isoToScreen(b.gridPosition.col, b.gridPosition.row);
 
         const floater = this.add.text(
           x + Phaser.Math.Between(-8, 8),

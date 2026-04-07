@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { BootScene } from './scenes/BootScene';
-import { MainMenuScene } from './scenes/MainMenuScene';
-import { BaseScene } from './scenes/BaseScene';
-import { CombatScene } from './scenes/CombatScene';
-import { WorldMapScene } from './scenes/WorldMapScene';
-import { HeroScene } from './scenes/HeroScene';
+import BootScene from './scenes/BootScene';
+import MainMenuScene from './scenes/MainMenuScene';
+import BaseScene from './scenes/BaseScene';
+import CombatScene from './scenes/CombatScene';
+import WorldMapScene from './scenes/WorldMapScene';
+import HeroScene from './scenes/HeroScene';
 import { GameStateManager } from './systems/GameStateManager';
 import { UIManager } from './ui/UIManager';
 

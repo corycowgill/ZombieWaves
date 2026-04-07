@@ -6,7 +6,7 @@
  * pan/zoom, and emits events for mission briefing flow.
  */
 
-import { District, DistrictBiome } from '../models/District';
+import { District, BiomeType, ThreatLevel } from '../models/District';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,14 +36,17 @@ interface WorldMapData {
 const HEX_RADIUS = 30;
 
 /** Biome-based fill colours. */
-const BIOME_COLOR: Record<DistrictBiome, number> = {
-  [DistrictBiome.Urban]:        0x4a6a8a,
-  [DistrictBiome.Industrial]:   0x7a6a4a,
-  [DistrictBiome.Residential]:  0x5a8a5a,
-  [DistrictBiome.Military]:     0x6a4a4a,
-  [DistrictBiome.Hospital]:     0x6a6a8a,
-  [DistrictBiome.Wasteland]:    0x8a7a5a,
-  [DistrictBiome.Underground]:  0x4a4a5a,
+const BIOME_COLOR: Partial<Record<BiomeType, number>> = {
+  [BiomeType.Suburban]:     0x4a6a8a,
+  [BiomeType.Highway]:      0x7a7a5a,
+  [BiomeType.Industrial]:   0x7a6a4a,
+  [BiomeType.Hospital]:     0x6a6a8a,
+  [BiomeType.Military]:     0x6a4a4a,
+  [BiomeType.Flooded]:      0x4a6a9a,
+  [BiomeType.Underground]:  0x4a4a5a,
+  [BiomeType.Farmland]:     0x5a8a5a,
+  [BiomeType.Docks]:        0x5a7a8a,
+  [BiomeType.Mall]:         0x8a7a5a,
 };
 
 // ---------------------------------------------------------------------------
@@ -162,19 +165,31 @@ export default class WorldMapScene extends Phaser.Scene {
   // Connections
   // -------------------------------------------------------------------------
 
+  /**
+   * Build a local adjacency list connecting each district to its two
+   * nearest neighbours (by position), then draw the connection lines.
+   */
   private drawConnections(): void {
     this.pathLines = this.add.graphics().setDepth(0);
 
+    // Build local connections: connect each district to its 2 closest neighbours
+    const connections = this.buildLocalConnections();
+
+    const drawn = new Set<string>();
+
     for (const district of this.districts) {
       const from = this.getPos(district);
+      const connIds = connections.get(district.id) ?? [];
 
-      for (const connId of district.connectedDistrictIds) {
+      for (const connId of connIds) {
+        // Avoid drawing each line twice
+        const key = district.id < connId ? `${district.id}|${connId}` : `${connId}|${district.id}`;
+        if (drawn.has(key)) continue;
+        drawn.add(key);
+
         const target = this.districts.find((d) => d.id === connId);
         if (!target) continue;
         const to = this.getPos(target);
-
-        // Avoid drawing each line twice
-        if (district.id > connId) continue;
 
         const accessible = district.isRevealed && target.isRevealed;
         const color = accessible ? 0x556677 : 0x222233;
@@ -187,6 +202,29 @@ export default class WorldMapScene extends Phaser.Scene {
         this.pathLines.strokePath();
       }
     }
+  }
+
+  /** Connect each district to its 2 nearest neighbours by screen position. */
+  private buildLocalConnections(): Map<string, string[]> {
+    const connections = new Map<string, string[]>();
+
+    for (const d of this.districts) {
+      const pos = this.getPos(d);
+      const sorted = this.districts
+        .filter((other) => other.id !== d.id)
+        .map((other) => {
+          const oPos = this.getPos(other);
+          const dx = oPos.x - pos.x;
+          const dy = oPos.y - pos.y;
+          return { id: other.id, dist: Math.sqrt(dx * dx + dy * dy) };
+        })
+        .sort((a, b) => a.dist - b.dist);
+
+      const nearest = sorted.slice(0, 2).map((n) => n.id);
+      connections.set(d.id, nearest);
+    }
+
+    return connections;
   }
 
   // -------------------------------------------------------------------------
@@ -269,7 +307,12 @@ export default class WorldMapScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(2);
 
       // Threat level indicator
-      const threatColor = district.threatLevel >= 7 ? '#ff4444' : district.threatLevel >= 4 ? '#ffaa44' : '#88cc88';
+      const threatColor =
+        district.threatLevel === ThreatLevel.Extreme || district.threatLevel === ThreatLevel.Boss
+          ? '#ff4444'
+          : district.threatLevel === ThreatLevel.High
+            ? '#ffaa44'
+            : '#88cc88';
       this.add.text(pos.x, pos.y + 16, `\u2620 ${district.threatLevel}`, {
         fontSize: '8px',
         color: threatColor,
@@ -372,7 +415,7 @@ export default class WorldMapScene extends Phaser.Scene {
 
     // Biome + threat
     container.add(
-      this.add.text(px, py - panelH / 2 + 40, `${district.biome}  |  Threat: ${district.threatLevel}/10`, {
+      this.add.text(px, py - panelH / 2 + 40, `${district.biome}  |  Threat: ${district.threatLevel}`, {
         fontSize: '11px',
         color: '#aaaacc',
       }).setOrigin(0.5),
@@ -390,12 +433,10 @@ export default class WorldMapScene extends Phaser.Scene {
     );
 
     // Rewards preview
-    if (district.lootTable.length > 0) {
-      const rewardStrs = district.lootTable
-        .slice(0, 3)
-        .map((l) => `${l.resourceType} (${l.minAmount}-${l.maxAmount})`);
+    if (district.resourceNodeTypes.length > 0) {
+      const rewardStrs = district.resourceNodeTypes.slice(0, 3);
       container.add(
-        this.add.text(px, py - panelH / 2 + 78, `Rewards: ${rewardStrs.join(', ')}`, {
+        this.add.text(px, py - panelH / 2 + 78, `Resources: ${rewardStrs.join(', ')}`, {
           fontSize: '9px',
           color: '#88aacc',
           wordWrap: { width: panelW - 30 },

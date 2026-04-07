@@ -80,9 +80,9 @@ const ENEMY_TEXTURE: Partial<Record<EnemyType, string>> = {
   [EnemyType.Shambler]:    'enemy_shambler',
   [EnemyType.Runner]:      'enemy_runner',
   [EnemyType.Spitter]:     'enemy_spitter',
-  [EnemyType.Brute]:       'enemy_bruiser',
-  [EnemyType.Raider]:      'enemy_raider',
-  [EnemyType.RaiderElite]: 'enemy_militia',
+  [EnemyType.Bruiser]:     'enemy_bruiser',
+  [EnemyType.RaiderScout]: 'enemy_raider',
+  [EnemyType.RaiderBrute]: 'enemy_militia',
 };
 
 // ---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ export default class CombatScene extends Phaser.Scene {
       const col = i < 4 ? GRID_COLS - 2 : GRID_COLS - 1;
       const row = i < 4 ? i + 2 : (i - 4) + 2;
       const textureKey = ENEMY_TEXTURE[enemy.type] ?? 'enemy_shambler';
-      this.createUnitSprite(enemy.id, enemy.name, textureKey, col, row, false, enemy.baseStats.hp);
+      this.createUnitSprite(enemy.id, enemy.name, textureKey, col, row, false, enemy.stats.maxHealth);
     });
   }
 
