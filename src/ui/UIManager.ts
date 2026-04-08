@@ -35,6 +35,7 @@ export class UIManager {
     this.setupSettings();
     this.setupDialogue();
     this.setupGameStateListeners();
+    this.setupTutorialBridge();
   }
 
   private cacheElements(): void {
@@ -293,6 +294,12 @@ export class UIManager {
         this.showToast('No save found');
       }
     });
+
+    document.getElementById('btn-replay-tutorial')!.addEventListener('click', () => {
+      this.gameState.tutorialManager.reset();
+      this.gameState.tutorialManager.start();
+      this.hidePanel(this.settingsPanel);
+    });
   }
 
   // --- Game State Listeners ---
@@ -344,6 +351,25 @@ export class UIManager {
         el.textContent = this.formatNumber(value);
       }
     }
+  }
+
+  // --- Tutorial Bridge ---
+
+  private setupTutorialBridge(): void {
+    const tutorial = this.gameState.tutorialManager;
+
+    // Forward Phaser scene events to tutorial
+    this.game.events.on('buildingSelected', () => tutorial.notifyEvent('buildingSelected'));
+    this.game.events.on('buildingPlaced', () => tutorial.notifyEvent('buildingPlaced'));
+    this.game.events.on('heroSelected', () => tutorial.notifyEvent('heroSelected'));
+
+    // Forward phase changes to tutorial
+    this.gameState.on('phaseChanged', () => tutorial.notifyEvent('phaseChanged'));
+
+    // When tutorial completes, show toast
+    tutorial.on('tutorialComplete', () => {
+      this.showToast('Tutorial complete — good luck, Commander!');
+    });
   }
 
   // --- Utilities ---

@@ -13,6 +13,7 @@ import { CampaignManager } from './CampaignManager';
 import { ExplorationManager } from './ExplorationManager';
 import { SaveManager, SaveSlot } from './SaveManager';
 import { AudioManager } from './AudioManager';
+import { TutorialManager } from './TutorialManager';
 
 export type GamePhase = 'mainMenu' | 'base' | 'combat' | 'worldMap' | 'heroes' | 'squad' | 'mission';
 
@@ -55,6 +56,7 @@ export class GameStateManager {
   public explorationManager: ExplorationManager;
   public saveManager: SaveManager;
   public audioManager: AudioManager;
+  public tutorialManager: TutorialManager;
 
   // --- Event callbacks ---
   private listeners: Map<string, ((...args: any[]) => void)[]> = new Map();
@@ -70,6 +72,7 @@ export class GameStateManager {
     this.explorationManager = new ExplorationManager();
     this.saveManager = new SaveManager();
     this.audioManager = new AudioManager();
+    this.tutorialManager = new TutorialManager();
   }
 
   // --- Event System ---
@@ -86,6 +89,8 @@ export class GameStateManager {
     if (callbacks) {
       callbacks.forEach(cb => cb(...args));
     }
+    // Forward events to tutorial system
+    this.tutorialManager.notifyEvent(event);
   }
 
   // --- Game Lifecycle ---
@@ -133,6 +138,11 @@ export class GameStateManager {
     this.setPhase('base');
     this.lastTickTime = Date.now();
     this.emit('gameStarted');
+
+    // Start tutorial for new games
+    if (!this.tutorialManager.wasCompleted()) {
+      setTimeout(() => this.tutorialManager.start(), 800);
+    }
   }
 
   /** Load game from save slot */
