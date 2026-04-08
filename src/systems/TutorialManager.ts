@@ -334,6 +334,13 @@ export class TutorialManager {
       nextBtn.textContent = this.currentStepIndex === this.steps.length - 1 ? 'Begin!' : 'Continue';
     }
 
+    // Add passthrough class when the step requires interacting with the game
+    if (step.completionEvent && step.highlightSelector) {
+      this.overlay!.classList.add('passthrough');
+    } else {
+      this.overlay!.classList.remove('passthrough');
+    }
+
     // Spotlight positioning
     if (step.highlightSelector) {
       const target = document.querySelector(step.highlightSelector) as HTMLElement;

@@ -131,13 +131,16 @@ export default class BootScene extends Phaser.Scene {
       ['building_farm',           '#228B22', '#006400'],   // green
       ['building_water_purifier', '#4169E1', '#00008B'],   // blue
       ['building_workshop',       '#FF8C00', '#CC7000'],   // orange
-      ['building_hospital',       '#FFFFFF', '#AAAAAA'],   // white
-      ['building_watchtower',     '#8B8682', '#555555'],   // stone
-      ['building_armory',         '#B22222', '#660000'],   // firebrick
-      ['building_lab',            '#9370DB', '#6A0DAD'],   // purple
-      ['building_power_plant',    '#FFD700', '#DAA520'],   // gold variant
+      ['building_hospital',       '#FFFFFF', '#AAAAAA'],   // white (infirmary)
+      ['building_watchtower',     '#8B8682', '#555555'],   // stone (radar tower)
+      ['building_lab',            '#9370DB', '#6A0DAD'],   // purple (research lab)
       ['building_wall',           '#696969', '#333333'],   // gray
-      ['building_storage',        '#D2B48C', '#8B7355'],   // tan
+      ['building_fuel_depot',     '#FF6347', '#CC4030'],   // tomato
+      ['building_scrapyard',      '#B8860B', '#8B6914'],   // dark goldenrod
+      ['building_hero_quarters',  '#DA70D6', '#8B008B'],   // orchid
+      ['building_turret',         '#556B2F', '#3B4A1F'],   // olive drab
+      ['building_trap',           '#CD853F', '#8B5A2B'],   // peru
+      ['building_garage',         '#4682B4', '#2F5F8A'],   // steel blue
     ];
 
     for (const [key, fill, border] of buildings) {

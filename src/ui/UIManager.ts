@@ -99,12 +99,7 @@ export class UIManager {
 
         const targetScene = sceneMap[sceneName];
         if (targetScene) {
-          this.game.scene.getScenes(true).forEach(s => {
-            if (s.scene.key !== 'BootScene') {
-              this.game.scene.stop(s.scene.key);
-            }
-          });
-          this.game.scene.start(targetScene);
+          this.switchToScene(targetScene, sceneName);
           this.gameState.setPhase(sceneName as GamePhase);
         }
       });
@@ -320,10 +315,14 @@ export class UIManager {
       // Enable continue button for future
       const btnContinue = document.getElementById('btn-continue')!;
       btnContinue.removeAttribute('disabled');
+      // Start the base scene
+      this.switchToScene('BaseScene', 'base');
     });
 
     this.gameState.on('gameLoaded', () => {
       this.startResourceUpdates();
+      // Start the base scene
+      this.switchToScene('BaseScene', 'base');
     });
 
     this.gameState.on('gameSaved', () => {
@@ -370,6 +369,24 @@ export class UIManager {
     tutorial.on('tutorialComplete', () => {
       this.showToast('Tutorial complete — good luck, Commander!');
     });
+  }
+
+  // --- Scene Switching ---
+
+  private switchToScene(sceneKey: string, navKey: string): void {
+    // Stop all active gameplay scenes
+    this.game.scene.getScenes(true).forEach(s => {
+      if (s.scene.key !== 'BootScene') {
+        this.game.scene.stop(s.scene.key);
+      }
+    });
+    this.game.scene.start(sceneKey);
+
+    // Update nav bar active state
+    const navBtns = document.querySelectorAll('.nav-btn');
+    navBtns.forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`[data-scene="${navKey}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
   }
 
   // --- Utilities ---

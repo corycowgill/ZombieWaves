@@ -903,6 +903,11 @@ body.colorblind .health-bar-fill.medium { background: #FFEB3B; }
   animation: spotlightPulse 2s ease-in-out infinite;
 }
 
+/* When spotlighting game container, let clicks pass through backdrop */
+#tutorial-overlay.passthrough .tutorial-backdrop {
+  pointer-events: none;
+}
+
 @keyframes spotlightPulse {
   0%, 100% { border-color: var(--accent-gold); box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65), 0 0 15px rgba(255, 215, 0, 0.2); }
   50% { border-color: var(--accent-orange); box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65), 0 0 25px rgba(255, 215, 0, 0.4); }

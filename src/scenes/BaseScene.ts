@@ -90,7 +90,7 @@ export default class BaseScene extends Phaser.Scene {
   private productionTimer = 0;
   private readonly PRODUCTION_INTERVAL = 5000; // 5 seconds
 
-  /** Reference to the external building list — injected via scene data. */
+  /** Reference to the external building list — pulled from gameState. */
   private buildings: Building[] = [];
 
   /** Pinch-zoom tracking. */
@@ -105,8 +105,12 @@ export default class BaseScene extends Phaser.Scene {
   // Phaser lifecycle
   // -------------------------------------------------------------------------
 
-  init(data?: { buildings?: Building[] }): void {
-    this.buildings = data?.buildings ?? [];
+  init(): void {
+    // Pull buildings from the central game state
+    const gameState = (this.game as any).gameState;
+    if (gameState?.baseManager) {
+      this.buildings = gameState.baseManager.getBuildings();
+    }
   }
 
   create(): void {
@@ -215,6 +219,12 @@ export default class BaseScene extends Phaser.Scene {
 
   /** Re-draw all building sprites from the current building list. */
   refreshBuildings(): void {
+    // Pull latest buildings from game state
+    const gameState = (this.game as any).gameState;
+    if (gameState?.baseManager) {
+      this.buildings = gameState.baseManager.getBuildings();
+    }
+
     // Destroy old sprites
     for (const ps of this.buildingSprites.values()) {
       ps.sprite.destroy();
